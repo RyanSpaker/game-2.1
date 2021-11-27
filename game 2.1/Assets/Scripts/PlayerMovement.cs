@@ -43,7 +43,7 @@ public class PlayerMovement : MonoBehaviour
 	//vector used to store velocity between updates
 	private Vector2 oldVel;
 	//boolean of whether or not we have intersected a frictionless wall.
-	private bool wall;
+	private bool slidingNoFricWall;
 	//tells which direction the wall is when we hit against a frictionless wall
 	private Vector2 wallDirection;
 	[Header("Jump Values")]
@@ -151,38 +151,51 @@ public class PlayerMovement : MonoBehaviour
 		crouchSpeed = walkSpeed * crouchSpeedFactor;
 		originalHeight = transform.localScale.y;
 	}
-    private void Move()
+	private Vector2 getVec2(Vector3 a) 
+	{
+		return new Vector2(a.x, a.z);
+	}
+	private void Move()
     {
-		Vector2 curVel = new Vector2(physics.velocity.x, physics.velocity.z);
-		Vector3 moveTemp = input.movement.x * transform.right + input.movement.y * transform.forward;
-		Vector2 move = (new Vector2(moveTemp.x, moveTemp.z)).normalized;
-		bool addWall = false;
-		if (wall && Vector2.Dot(move, wallDirection) >= 0)
+		//steps:
+		//1: determine where we want to go
+		//2: determine how fast we can go if we went there
+		//3: determine the correct acceleration
+		//4: lerp our distance
+
+		//Define Variables / Step 1:
+		Vector2 move, curVel, step, curStep;
+		bool addWallVel;
+		float maxVel, acceleration;
+
+		curVel = getVec2(physics.velocity); // current velocity
+		move = getVec2(input.movement.x * transform.right + input.movement.y * transform.forward).normalized;// movement vector
+		addWallVel = false; // whether or not we should add velocity to stat stuck to a wall
+		//if we just hit a frictionless wall, and we want to move towards the wall, then we need to change our move vector to be inline with the wall, and make sure to set addWallVel to true;
+		if (slidingNoFricWall && Vector2.Dot(move, wallDirection) >= 0)
 		{
-			if (Vector2.Dot(move, curVel) > 0)
-			{
-				move = curVel.normalized * move.magnitude;
-			}
-			else
-			{
-				move = curVel.normalized * move.magnitude * -1f;
-			}
-			addWall = true;
+			move = curVel.normalized * move.magnitude * Mathf.Sign(Vector2.Dot(move, curVel));
+			addWallVel = true;
 		}
-		float maxVel = walkSpeed;
+
+		//step 2:
+		//determine our maximum new speed, if we went along our movement vector
+		if (curVel.magnitude > sprintSpeed)
+		{
+			Debug.Log("debug");
+		}
+		maxVel = walkSpeed;
 		if (crouching && grounded) maxVel *= crouchSpeedFactor;
 		if (input.sprint) maxVel *= sprintFactor;
-		//if we have momentum, we have to calculate our max speed differently
-		if (speeding) 
-		{
-			//We only keep our momentum if we are traveling in the direction of our momentum.
-			if (Vector3.Dot(move, curVel) / curVel.magnitude > 0) 
-			{
-				//maxVel = Vector2.Scale(move, new  Vector2(Mathf.Abs(curVel.x), Mathf.Abs(curVel.y)) / sprintSpeed).magnitude * sprintSpeed;
-				maxVel = Vector3.Dot(move.normalized * curVel.magnitude, curVel) / curVel.magnitude;
-			}
-		}
-		float acceleration = walkAcc;
+		float angle = Vector2.Angle(move, curVel);
+		float nonFactor = sprintSpeed * (angle) / (90f);
+		float momentumFactor = curVel.magnitude * (90f-angle) / (90f);
+		float newMaxVel = Mathf.Sqrt(nonFactor * nonFactor + momentumFactor * momentumFactor);
+		maxVel = Mathf.Max(newMaxVel, maxVel);
+
+		//step 3:
+		//determine our acceleration constant to use for our given situation
+		acceleration = walkAcc;
 		if (input.sprint && !crouching) acceleration = sprintAcc;
 		if (!grounded) acceleration *= airAccFactor;
 		if(crouching && !grounded) acceleration *= crouchAirAccFactor;
@@ -191,11 +204,14 @@ public class PlayerMovement : MonoBehaviour
 		{
 			acceleration *= (int)((curVel.magnitude - sprintSpeed) / speedAccBlockSize) + 1;
 		}
+
+		//step 4:
+		//determine our step, and add velocity
 		move *= maxVel;
-		if(addWall)
+		if(addWallVel)
 			move = (move+wallDirection).normalized * move.magnitude;
-		Vector2 step = move - curVel;
-		Vector2 curStep = step.normalized;
+		step = move - curVel;
+		curStep = step.normalized;
 		curStep *= acceleration * Time.fixedDeltaTime;
 		if (step.magnitude < curStep.magnitude)
 		{
@@ -211,7 +227,7 @@ public class PlayerMovement : MonoBehaviour
 		switch (jumpState)
 		{
 			case 1:
-				physics.velocity += transform.up * jumpVelocity;
+				physics.velocity = transform.up * jumpVelocity;
 				gravity.force = new Vector3(0, upGrav, 0);
 				jumpState = 2;
 				break;
@@ -330,8 +346,8 @@ public class PlayerMovement : MonoBehaviour
 		float natVelLoss = ((Impulse / physics.mass) + oldVel).magnitude - curVel.magnitude;
 		Vector2  newVel = (Impulse / physics.mass + oldVel).normalized * (oldVel.magnitude - natVelLoss);
 		physics.velocity = new Vector3(newVel.x, physics.velocity.y, newVel.y);
-		wall = Impulse.magnitude > 0;
-		if (wall) wallDirection = (-Impulse).normalized;
+		slidingNoFricWall = Impulse.magnitude > 0;
+		if (slidingNoFricWall) wallDirection = (-Impulse).normalized;
 		grounded = groundCheck.grounded;
 		boost();
 		Move();
@@ -358,7 +374,7 @@ public class PlayerMovement : MonoBehaviour
 	}
 	void Jumped()
 	{
-		if (grounded && jumpState == 0) jumpState = 1;
+		if ((grounded || crouchState == 1 || crouchState == 4) && jumpState == 0) jumpState = 1;
 		if (!grounded && jumpState == 0 && physics.velocity.y <= 0) { jumpState = 2; }
 		if (!grounded && jumpState == 0 && physics.velocity.y > 0) { gravity.force = new Vector3(0, upGrav, 0); jumpState = 2; }
 	}
