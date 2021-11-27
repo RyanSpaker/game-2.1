@@ -44,6 +44,8 @@ public class PlayerMovement : MonoBehaviour
 	private Vector2 oldVel;
 	//boolean of whether or not we have intersected a frictionless wall.
 	private bool wall;
+	//tells which direction the wall is when we hit against a frictionless wall
+	private Vector2 wallDirection;
 	[Header("Jump Values")]
 	//height attained when jumping
 	public float jumpHeight;
@@ -154,11 +156,18 @@ public class PlayerMovement : MonoBehaviour
 		Vector2 curVel = new Vector2(physics.velocity.x, physics.velocity.z);
 		Vector3 moveTemp = input.movement.x * transform.right + input.movement.y * transform.forward;
 		Vector2 move = (new Vector2(moveTemp.x, moveTemp.z)).normalized;
-		if (wall)
+		bool addWall = false;
+		if (wall && Vector2.Dot(move, wallDirection) >= 0)
 		{
-			float change = Vector2.Dot(move, curVel) / curVel.magnitude;
-			change /= Mathf.Abs(change);
-			move = curVel.normalized * change;
+			if (Vector2.Dot(move, curVel) > 0)
+			{
+				move = curVel.normalized * move.magnitude;
+			}
+			else
+			{
+				move = curVel.normalized * move.magnitude * -1f;
+			}
+			addWall = true;
 		}
 		float maxVel = walkSpeed;
 		if (crouching && grounded) maxVel *= crouchSpeedFactor;
@@ -183,6 +192,8 @@ public class PlayerMovement : MonoBehaviour
 			acceleration *= (int)((curVel.magnitude - sprintSpeed) / speedAccBlockSize) + 1;
 		}
 		move *= maxVel;
+		if(addWall)
+			move = (move+wallDirection).normalized * move.magnitude;
 		Vector2 step = move - curVel;
 		Vector2 curStep = step.normalized;
 		curStep *= acceleration * Time.fixedDeltaTime;
@@ -320,6 +331,7 @@ public class PlayerMovement : MonoBehaviour
 		Vector2  newVel = (Impulse / physics.mass + oldVel).normalized * (oldVel.magnitude - natVelLoss);
 		physics.velocity = new Vector3(newVel.x, physics.velocity.y, newVel.y);
 		wall = Impulse.magnitude > 0;
+		if (wall) wallDirection = (-Impulse).normalized;
 		grounded = groundCheck.grounded;
 		boost();
 		Move();
@@ -333,6 +345,7 @@ public class PlayerMovement : MonoBehaviour
 		}
 		Impulse = new Vector2();
 		oldVel = new Vector2(physics.velocity.x, physics.velocity.z);
+		Debug.Log(physics.velocity.magnitude);
 	}
 	void Boosted()
 	{
