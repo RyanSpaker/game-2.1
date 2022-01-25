@@ -5,17 +5,18 @@ TagManager:
   serializedVersion: 2
   tags:
   - Frictionless
+  - ArrowCam
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Light
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
+  - ArrowCam
+  - Player
+  - Ground
+  - Object
   - 
   - 
   - 

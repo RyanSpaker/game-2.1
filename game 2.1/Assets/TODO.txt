@@ -1,10 +1,3 @@
-bugs:
-momentum conserved even when not sprinting
-crouch double jump
-frictionless walls camera isssue
-frctionless wall intersections
-
-needs implementing:
 sliding
 3 dimensional frictionless walls
 momentum dragging (make it so that you can slowly turn, and keep all momentum)
@@ -14,3 +7,11 @@ dash (move quickly to one side, then slow down, gives a small speed bost after t
 level objects: jump pad, boost pad, bounce wall
 an actually fleshed out map?
 ai that chases the player ? (could start out as just a floating orb that constantly follows the player))
+coyote time
+prejump time (jump right before hitting ground)
+bunny hops
+fix ramp lateral vault
+vault velocity prediction
+vault speed boost
+jump and vault cool downs
+wall run

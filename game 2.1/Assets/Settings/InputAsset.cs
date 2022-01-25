@@ -98,6 +98,15 @@ public partial class @InputAsset : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Debug"",
+                    ""type"": ""Button"",
+                    ""id"": ""1af84b8e-af0e-42fc-92cf-2a0965dc73c3"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -232,6 +241,17 @@ public partial class @InputAsset : IInputActionCollection2, IDisposable
                     ""action"": ""Boost"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3159dc49-ef3d-4cff-bd9a-4bd04bd1c8d5"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": ""Press(behavior=2)"",
+                    ""processors"": """",
+                    ""groups"": ""Player"",
+                    ""action"": ""Debug"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -265,6 +285,7 @@ public partial class @InputAsset : IInputActionCollection2, IDisposable
         m_InGame_LeftMouse = m_InGame.FindAction("LeftMouse", throwIfNotFound: true);
         m_InGame_RightMouse = m_InGame.FindAction("RightMouse", throwIfNotFound: true);
         m_InGame_Boost = m_InGame.FindAction("Boost", throwIfNotFound: true);
+        m_InGame_Debug = m_InGame.FindAction("Debug", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -332,6 +353,7 @@ public partial class @InputAsset : IInputActionCollection2, IDisposable
     private readonly InputAction m_InGame_LeftMouse;
     private readonly InputAction m_InGame_RightMouse;
     private readonly InputAction m_InGame_Boost;
+    private readonly InputAction m_InGame_Debug;
     public struct InGameActions
     {
         private @InputAsset m_Wrapper;
@@ -344,6 +366,7 @@ public partial class @InputAsset : IInputActionCollection2, IDisposable
         public InputAction @LeftMouse => m_Wrapper.m_InGame_LeftMouse;
         public InputAction @RightMouse => m_Wrapper.m_InGame_RightMouse;
         public InputAction @Boost => m_Wrapper.m_InGame_Boost;
+        public InputAction @Debug => m_Wrapper.m_InGame_Debug;
         public InputActionMap Get() { return m_Wrapper.m_InGame; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -377,6 +400,9 @@ public partial class @InputAsset : IInputActionCollection2, IDisposable
                 @Boost.started -= m_Wrapper.m_InGameActionsCallbackInterface.OnBoost;
                 @Boost.performed -= m_Wrapper.m_InGameActionsCallbackInterface.OnBoost;
                 @Boost.canceled -= m_Wrapper.m_InGameActionsCallbackInterface.OnBoost;
+                @Debug.started -= m_Wrapper.m_InGameActionsCallbackInterface.OnDebug;
+                @Debug.performed -= m_Wrapper.m_InGameActionsCallbackInterface.OnDebug;
+                @Debug.canceled -= m_Wrapper.m_InGameActionsCallbackInterface.OnDebug;
             }
             m_Wrapper.m_InGameActionsCallbackInterface = instance;
             if (instance != null)
@@ -405,6 +431,9 @@ public partial class @InputAsset : IInputActionCollection2, IDisposable
                 @Boost.started += instance.OnBoost;
                 @Boost.performed += instance.OnBoost;
                 @Boost.canceled += instance.OnBoost;
+                @Debug.started += instance.OnDebug;
+                @Debug.performed += instance.OnDebug;
+                @Debug.canceled += instance.OnDebug;
             }
         }
     }
@@ -428,5 +457,6 @@ public partial class @InputAsset : IInputActionCollection2, IDisposable
         void OnLeftMouse(InputAction.CallbackContext context);
         void OnRightMouse(InputAction.CallbackContext context);
         void OnBoost(InputAction.CallbackContext context);
+        void OnDebug(InputAction.CallbackContext context);
     }
 }
