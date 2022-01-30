@@ -10,13 +10,14 @@ public class Jump : MonoBehaviour
     public float jumpTime;
     public float standardGravPercent;
     public float jumpVelocity;
+    public float upGrav = 0f;
+    public float downGrav = 0f;
     private void Start()
     {
-        jumpHeight += .01f;
-        float upGrav = (2f * jumpHeight) / (Time.fixedDeltaTime * upTime - upTime*upTime);
+        upGrav = (2f * jumpHeight) / (Time.fixedDeltaTime * upTime - upTime*upTime);
         jumpVelocity = (-2f*jumpHeight)/(Time.fixedDeltaTime-upTime);
         float downTime = jumpTime - upTime;
-        float downGrav = (2f * jumpHeight) / (Time.fixedDeltaTime * downTime - downTime * downTime);
+        downGrav = (2f * jumpHeight) / (Time.fixedDeltaTime * downTime - downTime * downTime);
         float standardGrav = downGrav * standardGravPercent;
         gravityHandler.setGravs(upGrav, downGrav, standardGrav);
         vault.setGravity(upGrav);

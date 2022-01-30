@@ -6,11 +6,13 @@ public class Gravity : MonoBehaviour
 {
     public ConstantForce gravity;
     private float upGrav, downGrav, standardGrav, crouch;
-    public void updateGrav(bool jumping, float yVel, bool crouching, bool grounded) 
+    public void updateGrav(bool jumping, float yVel, bool crouching, bool grounded, bool safety) 
     {
         float grav = standardGrav;
-        if (jumping) if (yVel >= 0) grav = upGrav; else grav = downGrav;
-        if (crouching) grav *= crouch;
+        if (grounded || safety || (yVel > 0 && jumping)) grav = upGrav;
+        if (!grounded && !safety && yVel < 0) grav = downGrav;
+        if (crouching && !grounded && !safety) grav *= crouch;
+
         gravity.force = new Vector3(0, grav, 0);
     }
     public void setGravs(float up, float down, float standard) 
@@ -22,5 +24,14 @@ public class Gravity : MonoBehaviour
     public void setCrouch(float crouchFactor) 
     {
         crouch = crouchFactor;
+    }
+    public float getGrav(bool jumping, float yVel, bool crouching, bool grounded, bool safety) 
+    {
+        float grav = standardGrav;
+        if (grounded || safety || yVel > 0) grav = upGrav;
+        if (!grounded && !safety && yVel < 0) grav = downGrav;
+        if (crouching && !grounded && !safety) grav *= crouch;
+
+        return grav;
     }
 }
